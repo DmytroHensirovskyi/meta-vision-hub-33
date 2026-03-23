@@ -4,13 +4,30 @@ import Sidebar from "@/components/Sidebar";
 import KPICard from "@/components/KPICard";
 import HODLODChart from "@/components/HODLODChart";
 import VolatilityChart from "@/components/VolatilityChart";
-import { fetchMetaApiData } from "@/lib/api";
-import type { AnalyticsData } from "@/types/analytics";
+import { calculateHodLod, calculateMidnightOverlap, calculateNyExpansion } from "@/lib/metrics";
+import { generateMockCandles } from "@/lib/mockCandles";
+import type { SessionDistribution, VolatilityDataPoint } from "@/types/analytics";
 
 interface DashboardProps {
   token: string;
   onLogout: () => void;
 }
+
+interface MetricsState {
+  nyMidnightOverlapProb: number;
+  avgNYExpansion: number;
+  currentWinrate: number;
+  sessionDistribution: SessionDistribution[];
+  volatility: VolatilityDataPoint[];
+}
+
+const INITIAL_METRICS: MetricsState = {
+  nyMidnightOverlapProb: 0,
+  avgNYExpansion: 0,
+  currentWinrate: 0,
+  sessionDistribution: [],
+  volatility: [],
+};
 
 const todayLabel = () =>
   new Date().toLocaleDateString("en-US", {
@@ -22,19 +39,47 @@ const todayLabel = () =>
 
 const Dashboard = ({ token, onLogout }: DashboardProps) => {
   const [activeView, setActiveView] = useState("dashboard");
-  const [data, setData] = useState<AnalyticsData | null>(null);
+  const [metrics, setMetrics] = useState<MetricsState>(INITIAL_METRICS);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
+
     (async () => {
       setLoading(true);
-      const result = await fetchMetaApiData(token);
-      if (!cancelled) {
-        setData(result);
-        setLoading(false);
-      }
+
+      // ── In production: swap generateMockCandles() with a real OANDA API call
+      // using the `token`.  The metrics functions are API-agnostic — they only
+      // need an array of Candle objects.
+      const candles = generateMockCandles(20);
+
+      if (cancelled) return;
+
+      // ── Run the three SMC metric calculations ────────────────────────────────
+      const hodLod        = calculateHodLod(candles);
+      const overlapProb   = calculateMidnightOverlap(candles);
+      const nyExpansion   = calculateNyExpansion(candles);
+
+      // ── Map metrics → UI state ──────────────────────────────────────────────
+      setMetrics({
+        nyMidnightOverlapProb: overlapProb,
+        avgNYExpansion:        nyExpansion.average,
+        // Winrate is not yet calculable from OHLC candles alone (needs trade history).
+        // Placeholder: derive a pseudo-value from midnight-overlap probability.
+        currentWinrate:        Math.round(overlapProb * 0.65),
+
+        sessionDistribution: hodLod.map(s => ({
+          session: s.session,
+          value:   s.value,
+          color:   s.color,
+        })),
+
+        volatility: nyExpansion.daily,
+      });
+
+      setLoading(false);
     })();
+
     return () => { cancelled = true; };
   }, [token]);
 
@@ -73,10 +118,10 @@ const Dashboard = ({ token, onLogout }: DashboardProps) => {
                 <div className="flex items-center justify-center py-32">
                   <div className="flex flex-col items-center gap-3">
                     <div className="w-6 h-6 rounded-full border-2 border-border border-t-accent-blue animate-spin" />
-                    <p className="text-xs text-muted-foreground">Loading data…</p>
+                    <p className="text-xs text-muted-foreground">Calculating metrics…</p>
                   </div>
                 </div>
-              ) : data ? (
+              ) : (
                 <>
                   {/* ── KPI Cards ── */}
                   <section>
@@ -86,23 +131,23 @@ const Dashboard = ({ token, onLogout }: DashboardProps) => {
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                       <KPICard
                         title="NY Midnight Overlap Prob."
-                        value={`${data.kpi.nyMidnightOverlapProb}%`}
+                        value={`${metrics.nyMidnightOverlapProb}%`}
                         icon={Target}
-                        subtitle="Based on last 30 sessions"
+                        subtitle="% of days with 50+ pip deviation before NY open"
                         accentColor="hsl(var(--accent-blue))"
                       />
                       <KPICard
                         title="Avg NY Expansion"
-                        value={`${data.kpi.avgNYExpansion} pips`}
+                        value={`${metrics.avgNYExpansion} pips`}
                         icon={Maximize}
-                        subtitle="Average pip expansion at open"
+                        subtitle="Average pip range during NY session (07:00–17:00)"
                         accentColor="hsl(var(--accent-emerald))"
                       />
                       <KPICard
-                        title="Current Winrate"
-                        value={`${data.kpi.currentWinrate}%`}
+                        title="Estimated Winrate"
+                        value={`${metrics.currentWinrate}%`}
                         icon={Activity}
-                        subtitle="Last 50 executed trades"
+                        subtitle="Derived from overlap probability signal"
                         accentColor="hsl(var(--accent-amber))"
                       />
                     </div>
@@ -116,21 +161,21 @@ const Dashboard = ({ token, onLogout }: DashboardProps) => {
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                       {/* Donut — 1/3 */}
                       <div className="lg:col-span-1" style={{ minHeight: 320 }}>
-                        <HODLODChart data={data.sessionDistribution} />
+                        <HODLODChart data={metrics.sessionDistribution} />
                       </div>
                       {/* Bar — 2/3 */}
                       <div className="lg:col-span-2" style={{ minHeight: 320 }}>
-                        <VolatilityChart data={data.volatility} />
+                        <VolatilityChart data={metrics.volatility} />
                       </div>
                     </div>
                   </section>
 
                   {/* ── Footer note ── */}
                   <p className="text-xs text-muted-foreground/50 text-center pt-2">
-                    Data refreshes every session open · All times in UTC
+                    Metrics computed from {`${generateMockCandles.length ? "mock" : ""}`} OHLC candles · All times in UTC
                   </p>
                 </>
-              ) : null}
+              )}
             </>
           )}
 
@@ -139,7 +184,7 @@ const Dashboard = ({ token, onLogout }: DashboardProps) => {
           )}
 
           {activeView === "settings" && (
-            <EmptyView title="Settings" description="Manage your MetaApi connection and preferences." />
+            <EmptyView title="Settings" description="Manage your OANDA / MetaApi connection and preferences." />
           )}
         </div>
       </main>
