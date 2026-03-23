@@ -1,0 +1,147 @@
+import { useState } from "react";
+import { KeyRound, Loader2, Zap } from "lucide-react";
+
+interface AuthScreenProps {
+  onConnect: (token: string) => void;
+}
+
+const AuthScreen = ({ onConnect }: AuthScreenProps) => {
+  const [token, setToken] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+
+    if (!token.trim()) {
+      setError("Please enter a MetaApi token to continue.");
+      return;
+    }
+
+    setLoading(true);
+    // Simulate a short connection delay
+    await new Promise((r) => setTimeout(r, 900));
+    localStorage.setItem("metaapi_token", token.trim());
+    setLoading(false);
+    onConnect(token.trim());
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-background animate-fade-in">
+      {/* Background subtle grid */}
+      <div
+        className="absolute inset-0 pointer-events-none opacity-[0.03]"
+        style={{
+          backgroundImage:
+            "linear-gradient(hsl(var(--foreground)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px)",
+          backgroundSize: "40px 40px",
+        }}
+      />
+
+      <div className="relative w-full max-w-sm mx-4 animate-slide-up">
+        {/* Logo & brand */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-lg bg-surface border border-border mb-4">
+            <Zap className="w-5 h-5 text-accent-blue" strokeWidth={1.5} />
+          </div>
+          <h1 className="text-xl font-semibold text-foreground tracking-tight">
+            Analytica
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            SMC Analytics Engine
+          </p>
+        </div>
+
+        {/* Card */}
+        <div className="bg-surface border border-border rounded-lg p-6">
+          <div className="mb-5">
+            <h2 className="text-sm font-medium text-foreground">
+              Connect MetaApi Account
+            </h2>
+            <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
+              Enter your MetaApi token to authenticate and load your trading
+              analytics.
+            </p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Token input */}
+            <div>
+              <label
+                htmlFor="token"
+                className="block text-xs font-medium text-muted-foreground mb-1.5"
+              >
+                MetaApi Token
+              </label>
+              <div className="relative">
+                <KeyRound
+                  className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none"
+                  strokeWidth={1.5}
+                />
+                <input
+                  id="token"
+                  type="password"
+                  value={token}
+                  onChange={(e) => setToken(e.target.value)}
+                  placeholder="xxxxxxxxxxxxxxxxxxxxxxxx"
+                  className="
+                    w-full h-9 pl-8 pr-3 text-sm rounded-md
+                    bg-background border border-border
+                    text-foreground placeholder:text-muted-foreground/50
+                    focus:outline-none focus:ring-1 focus:ring-accent-blue focus:border-accent-blue
+                    transition-colors
+                  "
+                />
+              </div>
+            </div>
+
+            {/* Error */}
+            {error && (
+              <p className="text-xs text-destructive">{error}</p>
+            )}
+
+            {/* Submit */}
+            <button
+              type="submit"
+              disabled={loading}
+              className="
+                w-full h-9 flex items-center justify-center gap-2
+                rounded-md text-sm font-medium
+                bg-accent-blue text-background
+                hover:opacity-90 active:opacity-80
+                disabled:opacity-50 disabled:cursor-not-allowed
+                transition-opacity
+              "
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  Connecting…
+                </>
+              ) : (
+                "Connect Account"
+              )}
+            </button>
+          </form>
+        </div>
+
+        {/* Demo hint */}
+        <p className="mt-4 text-center text-xs text-muted-foreground/60">
+          No token? The dashboard loads with demo data.
+        </p>
+        <button
+          onClick={() => {
+            localStorage.setItem("metaapi_token", "demo");
+            onConnect("demo");
+          }}
+          className="mt-1 w-full text-center text-xs text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2"
+        >
+          Continue with demo data →
+        </button>
+      </div>
+    </div>
+  );
+};
+
+export default AuthScreen;
