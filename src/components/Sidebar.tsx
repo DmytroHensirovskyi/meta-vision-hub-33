@@ -1,4 +1,6 @@
 import { LayoutDashboard, BookOpen, Settings, LogOut, Zap, Radio } from "lucide-react";
+import { useLanguage } from "@/hooks/useLanguage";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 interface SidebarProps {
   activeView: string;
@@ -6,13 +8,15 @@ interface SidebarProps {
   onLogout: () => void;
 }
 
-const navItems = [
-  { id: "dashboard",     label: "Dashboard",     icon: LayoutDashboard },
-  { id: "trade-journal", label: "Trade Journal",  icon: BookOpen },
-  { id: "settings",      label: "Settings",       icon: Settings },
-];
-
 const Sidebar = ({ activeView, onNavigate, onLogout }: SidebarProps) => {
+  const { t } = useLanguage();
+
+  const navItems = [
+    { id: "dashboard",     label: t("nav_dashboard"),  icon: LayoutDashboard },
+    { id: "trade-journal", label: t("nav_journal"),    icon: BookOpen },
+    { id: "settings",      label: t("nav_settings"),   icon: Settings },
+  ];
+
   return (
     <aside className="
       fixed left-0 top-0 h-full w-56
@@ -56,10 +60,15 @@ const Sidebar = ({ activeView, onNavigate, onLogout }: SidebarProps) => {
         })}
       </nav>
 
+      {/* Language Switcher */}
+      <div className="px-4 py-3 border-t border-sidebar-border">
+        <LanguageSwitcher />
+      </div>
+
       {/* Active Connection */}
       <div className="px-4 py-3 border-t border-sidebar-border">
         <p className="text-xs text-muted-foreground mb-2 uppercase tracking-widest font-medium">
-          Active Connection
+          {t("sidebar_connection")}
         </p>
         <div className="flex items-center gap-2">
           <span className="relative flex h-2 w-2">
@@ -68,7 +77,7 @@ const Sidebar = ({ activeView, onNavigate, onLogout }: SidebarProps) => {
           </span>
           <span className="text-xs text-foreground flex items-center gap-1.5">
             <Radio className="w-3 h-3 text-muted-foreground" strokeWidth={1.5} />
-            MT5 Server
+            {t("sidebar_server")}
           </span>
         </div>
       </div>
@@ -85,7 +94,7 @@ const Sidebar = ({ activeView, onNavigate, onLogout }: SidebarProps) => {
           "
         >
           <LogOut className="w-4 h-4 shrink-0" strokeWidth={1.5} />
-          Logout
+          {t("sidebar_logout")}
         </button>
       </div>
     </aside>
