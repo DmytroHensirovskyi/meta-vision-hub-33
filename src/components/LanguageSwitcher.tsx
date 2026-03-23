@@ -3,7 +3,6 @@ import type { Language } from "@/lib/i18n";
 
 const LANGS: { code: Language; label: string; flag: string }[] = [
   { code: "en", label: "EN", flag: "🇬🇧" },
-  { code: "ru", label: "RU", flag: "🇷🇺" },
   { code: "uk", label: "UA", flag: "🇺🇦" },
 ];
 
