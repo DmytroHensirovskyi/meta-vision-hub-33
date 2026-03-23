@@ -1,11 +1,14 @@
 import { useState } from "react";
 import { KeyRound, Loader2, Zap } from "lucide-react";
+import { useLanguage } from "@/hooks/useLanguage";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 interface AuthScreenProps {
   onConnect: (token: string) => void;
 }
 
 const AuthScreen = ({ onConnect }: AuthScreenProps) => {
+  const { t } = useLanguage();
   const [token, setToken] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -15,12 +18,11 @@ const AuthScreen = ({ onConnect }: AuthScreenProps) => {
     setError("");
 
     if (!token.trim()) {
-      setError("Please enter a MetaApi token to continue.");
+      setError(t("auth_error_empty"));
       return;
     }
 
     setLoading(true);
-    // Simulate a short connection delay
     await new Promise((r) => setTimeout(r, 900));
     localStorage.setItem("metaapi_token", token.trim());
     setLoading(false);
@@ -39,6 +41,11 @@ const AuthScreen = ({ onConnect }: AuthScreenProps) => {
         }}
       />
 
+      {/* Language switcher — top right */}
+      <div className="absolute top-4 right-4">
+        <LanguageSwitcher />
+      </div>
+
       <div className="relative w-full max-w-sm mx-4 animate-slide-up">
         {/* Logo & brand */}
         <div className="text-center mb-8">
@@ -49,7 +56,7 @@ const AuthScreen = ({ onConnect }: AuthScreenProps) => {
             Analytica
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            SMC Analytics Engine
+            {t("auth_subtitle")}
           </p>
         </div>
 
@@ -57,22 +64,20 @@ const AuthScreen = ({ onConnect }: AuthScreenProps) => {
         <div className="bg-surface border border-border rounded-lg p-6">
           <div className="mb-5">
             <h2 className="text-sm font-medium text-foreground">
-              Connect MetaApi Account
+              {t("auth_connect_title")}
             </h2>
             <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
-              Enter your MetaApi token to authenticate and load your trading
-              analytics.
+              {t("auth_connect_desc")}
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Token input */}
             <div>
               <label
                 htmlFor="token"
                 className="block text-xs font-medium text-muted-foreground mb-1.5"
               >
-                MetaApi Token
+                {t("auth_token_label")}
               </label>
               <div className="relative">
                 <KeyRound
@@ -96,12 +101,10 @@ const AuthScreen = ({ onConnect }: AuthScreenProps) => {
               </div>
             </div>
 
-            {/* Error */}
             {error && (
               <p className="text-xs text-destructive">{error}</p>
             )}
 
-            {/* Submit */}
             <button
               type="submit"
               disabled={loading}
@@ -117,18 +120,17 @@ const AuthScreen = ({ onConnect }: AuthScreenProps) => {
               {loading ? (
                 <>
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  Connecting…
+                  {t("auth_connecting")}
                 </>
               ) : (
-                "Connect Account"
+                t("auth_connect_btn")
               )}
             </button>
           </form>
         </div>
 
-        {/* Demo hint */}
         <p className="mt-4 text-center text-xs text-muted-foreground/60">
-          No token? The dashboard loads with demo data.
+          {t("auth_no_token")}
         </p>
         <button
           onClick={() => {
@@ -137,7 +139,7 @@ const AuthScreen = ({ onConnect }: AuthScreenProps) => {
           }}
           className="mt-1 w-full text-center text-xs text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2"
         >
-          Continue with demo data →
+          {t("auth_demo")}
         </button>
       </div>
     </div>

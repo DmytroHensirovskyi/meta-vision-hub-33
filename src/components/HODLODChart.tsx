@@ -1,5 +1,6 @@
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import type { SessionDistribution } from "@/types/analytics";
+import { useLanguage } from "@/hooks/useLanguage";
 
 interface HODLODChartProps {
   data: SessionDistribution[];
@@ -52,12 +53,14 @@ const renderCustomLabel = ({
 };
 
 const HODLODChart = ({ data }: HODLODChartProps) => {
+  const { t } = useLanguage();
+
   return (
     <div className="bg-surface border border-border rounded-lg p-5 flex flex-col h-full">
       <div className="mb-4">
-        <h3 className="text-sm font-medium text-foreground">HOD / LOD by Session</h3>
+        <h3 className="text-sm font-medium text-foreground">{t("chart_hodlod_title")}</h3>
         <p className="text-xs text-muted-foreground mt-0.5">
-          Distribution of high/low of day
+          {t("chart_hodlod_subtitle")}
         </p>
       </div>
 
