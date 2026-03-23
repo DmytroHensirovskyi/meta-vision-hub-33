@@ -3,6 +3,7 @@ import {
   ResponsiveContainer, Cell,
 } from "recharts";
 import type { VolatilityDataPoint } from "@/types/analytics";
+import { useLanguage } from "@/hooks/useLanguage";
 
 interface VolatilityChartProps {
   data: VolatilityDataPoint[];
@@ -15,19 +16,19 @@ interface CustomTooltipProps {
 }
 
 const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
+  const { t } = useLanguage();
   if (!active || !payload?.length) return null;
   return (
     <div className="bg-surface border border-border rounded-md px-3 py-2 shadow-lg">
       <p className="text-xs text-muted-foreground mb-0.5">{label}</p>
       <p className="text-sm font-semibold text-foreground">
         {payload[0].value}
-        <span className="text-xs text-muted-foreground ml-1 font-normal">pips</span>
+        <span className="text-xs text-muted-foreground ml-1 font-normal">{t("pips")}</span>
       </p>
     </div>
   );
 };
 
-// Colour bars by intensity: low → slate-blue, mid → emerald, high → amber
 const getBarColor = (pips: number) => {
   if (pips >= 70) return "hsl(38,60%,50%)";
   if (pips >= 50) return "hsl(152,48%,42%)";
@@ -35,15 +36,17 @@ const getBarColor = (pips: number) => {
 };
 
 const VolatilityChart = ({ data }: VolatilityChartProps) => {
+  const { t } = useLanguage();
+
   return (
     <div className="bg-surface border border-border rounded-lg p-5 flex flex-col h-full">
       <div className="mb-4 flex items-start justify-between">
         <div>
           <h3 className="text-sm font-medium text-foreground">
-            NY Session Volatility
+            {t("chart_volatility_title")}
           </h3>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Pip range — last 15 trading days
+            {t("chart_volatility_subtitle")}
           </p>
         </div>
 
@@ -51,15 +54,15 @@ const VolatilityChart = ({ data }: VolatilityChartProps) => {
         <div className="flex items-center gap-3 text-xs text-muted-foreground">
           <span className="flex items-center gap-1">
             <span className="w-2 h-2 rounded-sm inline-block" style={{ background: "hsl(215,55%,55%)" }} />
-            Low
+            {t("legend_low")}
           </span>
           <span className="flex items-center gap-1">
             <span className="w-2 h-2 rounded-sm inline-block" style={{ background: "hsl(152,48%,42%)" }} />
-            Mid
+            {t("legend_mid")}
           </span>
           <span className="flex items-center gap-1">
             <span className="w-2 h-2 rounded-sm inline-block" style={{ background: "hsl(38,60%,50%)" }} />
-            High
+            {t("legend_high")}
           </span>
         </div>
       </div>
