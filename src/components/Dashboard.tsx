@@ -2,32 +2,26 @@ import { useState, useEffect } from "react";
 import { Target, Maximize, Activity } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
 import KPICard from "@/components/KPICard";
-import HODLODChart from "@/components/HODLODChart";
-import VolatilityChart from "@/components/VolatilityChart";
-import { calculateHodLod, calculateMidnightOverlap, calculateNyExpansion } from "@/lib/metrics";
+import SessionDonutChart from "@/components/SessionDonutChart";
+import DayOfWeekChart from "@/components/DayOfWeekChart";
+import { computeAllMetrics } from "@/lib/metrics";
 import { generateMockCandles } from "@/lib/mockCandles";
+import { fetchCandles } from "@/lib/api";
 import { useLanguage } from "@/hooks/useLanguage";
-import type { SessionDistribution, VolatilityDataPoint } from "@/types/analytics";
+import type { SMCMetrics, CompressionState } from "@/types/analytics";
 
 interface DashboardProps {
   token: string;
   onLogout: () => void;
 }
 
-interface MetricsState {
-  nyMidnightOverlapProb: number;
-  avgNYExpansion: number;
-  currentWinrate: number;
-  sessionDistribution: SessionDistribution[];
-  volatility: VolatilityDataPoint[];
-}
-
-const INITIAL_METRICS: MetricsState = {
-  nyMidnightOverlapProb: 0,
-  avgNYExpansion: 0,
-  currentWinrate: 0,
-  sessionDistribution: [],
-  volatility: [],
+const EMPTY_METRICS: SMCMetrics = {
+  asianSweepProb:   0,
+  judasBiasProb:    0,
+  compressionState: "Neutral",
+  hodDistribution:  [],
+  lodDistribution:  [],
+  dayOfWeek:        [],
 };
 
 const todayLabel = (language: string) =>
@@ -36,58 +30,43 @@ const todayLabel = (language: string) =>
     { weekday: "long", year: "numeric", month: "long", day: "numeric" }
   );
 
+function compressionAccent(state: CompressionState): string {
+  if (state === "Expected: Trend/Expansion")  return "hsl(var(--accent-emerald))";
+  if (state === "Expected: Chop/Contraction") return "hsl(355,65%,52%)";
+  return "hsl(var(--accent-amber))";
+}
+
+function compressionDisplay(state: CompressionState, t: (k: string) => string): string {
+  if (state === "Expected: Trend/Expansion")  return t("compression_trend");
+  if (state === "Expected: Chop/Contraction") return t("compression_chop");
+  return t("compression_neutral");
+}
+
 const Dashboard = ({ token, onLogout }: DashboardProps) => {
   const { t, language } = useLanguage();
-  const [activeView, setActiveView] = useState("dashboard");
-  const [metrics, setMetrics] = useState<MetricsState>(INITIAL_METRICS);
-  const [loading, setLoading] = useState(true);
+  const [activeView, setActiveView]   = useState("dashboard");
+  const [metrics, setMetrics]         = useState<SMCMetrics>(EMPTY_METRICS);
+  const [loading, setLoading]         = useState(true);
 
   useEffect(() => {
     let cancelled = false;
-
     (async () => {
       setLoading(true);
-      const candles = generateMockCandles(20);
+
+      // Attempt real fetch; fall back to mock candles when token absent / fails
+      let candles = await fetchCandles(token);
+      if (candles.length === 0) candles = generateMockCandles(60); // 60 days of M15-like data
+
       if (cancelled) return;
-
-      const hodLod      = calculateHodLod(candles);
-      const overlapProb = calculateMidnightOverlap(candles);
-      const nyExpansion = calculateNyExpansion(candles);
-
-      setMetrics({
-        nyMidnightOverlapProb: overlapProb,
-        avgNYExpansion:        nyExpansion.average,
-        currentWinrate:        Math.round(overlapProb * 0.65),
-        sessionDistribution: hodLod.map(s => ({
-          session: s.session,
-          value:   s.value,
-          color:   s.color,
-        })),
-        volatility: nyExpansion.daily,
-      });
-
+      setMetrics(computeAllMetrics(candles));
       setLoading(false);
     })();
-
     return () => { cancelled = true; };
   }, [token]);
 
-  // Translate session names in distribution data
-  const translatedDistribution = metrics.sessionDistribution.map(s => ({
-    ...s,
-    session:
-      s.session === "Asia"   ? t("session_asia")   :
-      s.session === "London" ? t("session_london") :
-      s.session === "NY"     ? t("session_ny")     : s.session,
-  }));
-
   return (
     <div className="min-h-screen bg-background flex animate-fade-in">
-      <Sidebar
-        activeView={activeView}
-        onNavigate={setActiveView}
-        onLogout={onLogout}
-      />
+      <Sidebar activeView={activeView} onNavigate={setActiveView} onLogout={onLogout} />
 
       <main className="flex-1 ml-56 flex flex-col min-h-screen overflow-y-auto">
         {/* Header */}
@@ -98,7 +77,6 @@ const Dashboard = ({ token, onLogout }: DashboardProps) => {
             </h1>
             <p className="text-xs text-muted-foreground mt-0.5">{todayLabel(language)}</p>
           </div>
-
           <div className="flex items-center gap-2">
             <span className="flex items-center gap-1.5 text-xs text-muted-foreground border border-border rounded-md px-2.5 py-1">
               <span className="w-1.5 h-1.5 rounded-full bg-accent-emerald inline-block" />
@@ -120,52 +98,62 @@ const Dashboard = ({ token, onLogout }: DashboardProps) => {
                 </div>
               ) : (
                 <>
-                  {/* KPI Cards */}
+                  {/* ── Top Row: 3 KPI Cards ── */}
                   <section>
                     <p className="text-xs text-muted-foreground uppercase tracking-widest font-medium mb-3">
                       {t("section_metrics")}
                     </p>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                       <KPICard
-                        title={t("kpi_overlap_title")}
-                        value={`${metrics.nyMidnightOverlapProb}%`}
-                        icon={Target}
-                        subtitle={t("kpi_overlap_subtitle")}
+                        title={t("kpi_asian_sweep_title")}
+                        value={`${metrics.asianSweepProb}%`}
+                        icon={Activity}
+                        subtitle={t("kpi_asian_sweep_subtitle")}
                         accentColor="hsl(var(--accent-blue))"
                       />
                       <KPICard
-                        title={t("kpi_expansion_title")}
-                        value={`${metrics.avgNYExpansion} ${t("pips")}`}
-                        icon={Maximize}
-                        subtitle={t("kpi_expansion_subtitle")}
-                        accentColor="hsl(var(--accent-emerald))"
+                        title={t("kpi_judas_title")}
+                        value={`${metrics.judasBiasProb}%`}
+                        icon={Target}
+                        subtitle={t("kpi_judas_subtitle")}
+                        accentColor="hsl(var(--accent-amber))"
                       />
                       <KPICard
-                        title={t("kpi_winrate_title")}
-                        value={`${metrics.currentWinrate}%`}
-                        icon={Activity}
-                        subtitle={t("kpi_winrate_subtitle")}
-                        accentColor="hsl(var(--accent-amber))"
+                        title={t("kpi_compression_title")}
+                        value={compressionDisplay(metrics.compressionState, t)}
+                        icon={Maximize}
+                        subtitle={t("kpi_compression_subtitle")}
+                        accentColor={compressionAccent(metrics.compressionState)}
                       />
                     </div>
                   </section>
 
-                  {/* Charts */}
+                  {/* ── Middle Row: HOD + LOD Donuts ── */}
                   <section>
                     <p className="text-xs text-muted-foreground uppercase tracking-widest font-medium mb-3">
                       {t("section_session")}
                     </p>
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                      <div className="lg:col-span-1" style={{ minHeight: 320 }}>
-                        <HODLODChart data={translatedDistribution} />
-                      </div>
-                      <div className="lg:col-span-2" style={{ minHeight: 320 }}>
-                        <VolatilityChart data={metrics.volatility} />
-                      </div>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                      <SessionDonutChart
+                        title={t("chart_hod_title")}
+                        subtitle={t("chart_hod_subtitle")}
+                        data={metrics.hodDistribution}
+                      />
+                      <SessionDonutChart
+                        title={t("chart_lod_title")}
+                        subtitle={t("chart_lod_subtitle")}
+                        data={metrics.lodDistribution}
+                      />
                     </div>
                   </section>
 
-                  {/* Footer note */}
+                  {/* ── Bottom Row: Day of Week Bar Chart ── */}
+                  <section>
+                    <div style={{ minHeight: 320 }}>
+                      <DayOfWeekChart data={metrics.dayOfWeek} />
+                    </div>
+                  </section>
+
                   <p className="text-xs text-muted-foreground/50 text-center pt-2">
                     {t("footer_note")}
                   </p>
@@ -177,7 +165,6 @@ const Dashboard = ({ token, onLogout }: DashboardProps) => {
           {activeView === "trade-journal" && (
             <EmptyView title={t("journal_title")} description={t("journal_desc")} />
           )}
-
           {activeView === "settings" && (
             <EmptyView title={t("settings_title")} description={t("settings_desc")} />
           )}

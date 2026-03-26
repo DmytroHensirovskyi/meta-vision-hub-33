@@ -27,31 +27,37 @@ export const translations = {
 
     // KPI section
     section_metrics: "Key Metrics",
-    kpi_overlap_title: "NY Midnight Overlap Prob.",
-    kpi_overlap_subtitle: "% of days with 50+ pip deviation before NY open",
-    kpi_expansion_title: "Avg NY Expansion",
-    kpi_expansion_subtitle: "Average pip range during NY session (07:00–17:00)",
-    kpi_winrate_title: "Estimated Winrate",
-    kpi_winrate_subtitle: "Derived from overlap probability signal",
-    pips: "pips",
+    kpi_asian_sweep_title: "Asian Sweep Reversal",
+    kpi_asian_sweep_subtitle: "% of swept days that reversed bullishly",
+    kpi_judas_title: "Judas Swing Bullish Bias",
+    kpi_judas_subtitle: "% bullish days after London discount sweep",
+    kpi_compression_title: "Volatility State",
+    kpi_compression_subtitle: "Yesterday's range vs 20-day ADR",
+    compression_trend: "Trend/Expansion",
+    compression_chop: "Chop/Contraction",
+    compression_neutral: "Neutral",
 
     // Charts section
-    section_session: "Session Analysis",
-    chart_hodlod_title: "HOD / LOD by Session",
-    chart_hodlod_subtitle: "Distribution of high/low of day",
-    chart_volatility_title: "NY Session Volatility",
-    chart_volatility_subtitle: "Pip range — last 15 trading days",
-    legend_low: "Low",
-    legend_mid: "Mid",
-    legend_high: "High",
+    section_session: "HOD / LOD Session Distribution",
+    chart_hod_title: "High of Day (HOD) Probability",
+    chart_hod_subtitle: "Session where daily HOD is typically formed",
+    chart_lod_title: "Low of Day (LOD) Probability",
+    chart_lod_subtitle: "Session where daily LOD is typically formed",
+
+    // Day of Week chart
+    chart_dow_title: "Day of Week Profiling",
+    chart_dow_subtitle: "Bullish vs Bearish close % by weekday",
+    dow_bullish: "Bullish",
+    dow_bearish: "Bearish",
 
     // Sessions
     session_asia: "Asia",
     session_london: "London",
     session_ny: "NY",
+    session_other: "Other",
 
     // Footer
-    footer_note: "Metrics computed from OHLC candles · All times in UTC",
+    footer_note: "Metrics computed from OHLC candles · All times in EST (UTC-5)",
 
     // Empty views
     journal_title: "Trade Journal",
@@ -60,7 +66,7 @@ export const translations = {
     settings_desc: "Manage your OANDA / MetaApi connection and preferences.",
 
     // Loading
-    loading: "Calculating metrics…",
+    loading: "Calculating SMC metrics…",
   },
   ru: {
     // Auth
@@ -88,31 +94,37 @@ export const translations = {
 
     // KPI section
     section_metrics: "Ключевые метрики",
-    kpi_overlap_title: "Вероятность перекрытия NY Midnight",
-    kpi_overlap_subtitle: "% дней с отклонением 50+ пипсов до открытия NY",
-    kpi_expansion_title: "Ср. расширение NY",
-    kpi_expansion_subtitle: "Средний диапазон в пипсах в сессии NY (07:00–17:00)",
-    kpi_winrate_title: "Примерный винрейт",
-    kpi_winrate_subtitle: "Рассчитан на основе сигнала вероятности перекрытия",
-    pips: "пипс.",
+    kpi_asian_sweep_title: "Разворот Asian Sweep",
+    kpi_asian_sweep_subtitle: "% дней с подметанием, давших бычий разворот",
+    kpi_judas_title: "Бычий уклон Judas Swing",
+    kpi_judas_subtitle: "% бычьих дней после дискаунтного подметания Лондоном",
+    kpi_compression_title: "Состояние волатильности",
+    kpi_compression_subtitle: "Вчерашний диапазон vs 20-дневный ADR",
+    compression_trend: "Тренд/Расширение",
+    compression_chop: "Флет/Сжатие",
+    compression_neutral: "Нейтральный",
 
     // Charts section
-    section_session: "Анализ сессий",
-    chart_hodlod_title: "HOD / LOD по сессиям",
-    chart_hodlod_subtitle: "Распределение максимума/минимума дня",
-    chart_volatility_title: "Волатильность сессии NY",
-    chart_volatility_subtitle: "Диапазон в пипсах — последние 15 торговых дней",
-    legend_low: "Низкая",
-    legend_mid: "Средняя",
-    legend_high: "Высокая",
+    section_session: "Распределение HOD / LOD по сессиям",
+    chart_hod_title: "Вероятность HOD (максимум дня)",
+    chart_hod_subtitle: "Сессия, в которой обычно формируется HOD",
+    chart_lod_title: "Вероятность LOD (минимум дня)",
+    chart_lod_subtitle: "Сессия, в которой обычно формируется LOD",
+
+    // Day of Week chart
+    chart_dow_title: "Профиль по дням недели",
+    chart_dow_subtitle: "% бычьих и медвежьих закрытий по дням",
+    dow_bullish: "Бычьи",
+    dow_bearish: "Медвежьи",
 
     // Sessions
     session_asia: "Азия",
     session_london: "Лондон",
     session_ny: "NY",
+    session_other: "Прочие",
 
     // Footer
-    footer_note: "Метрики рассчитаны по OHLC-свечам · Всё время в UTC",
+    footer_note: "Метрики рассчитаны по OHLC-свечам · Всё время в EST (UTC-5)",
 
     // Empty views
     journal_title: "Журнал сделок",
@@ -121,7 +133,7 @@ export const translations = {
     settings_desc: "Управляйте подключением OANDA / MetaApi и настройками.",
 
     // Loading
-    loading: "Вычисление метрик…",
+    loading: "Вычисление метрик SMC…",
   },
   uk: {
     // Auth
@@ -149,31 +161,37 @@ export const translations = {
 
     // KPI section
     section_metrics: "Ключові метрики",
-    kpi_overlap_title: "Ймовірність перекриття NY Midnight",
-    kpi_overlap_subtitle: "% днів з відхиленням 50+ піпсів до відкриття NY",
-    kpi_expansion_title: "Сер. розширення NY",
-    kpi_expansion_subtitle: "Середній діапазон у піпсах у сесії NY (07:00–17:00)",
-    kpi_winrate_title: "Приблизний вінрейт",
-    kpi_winrate_subtitle: "Розраховано на основі сигналу ймовірності перекриття",
-    pips: "піпс.",
+    kpi_asian_sweep_title: "Розворот Asian Sweep",
+    kpi_asian_sweep_subtitle: "% підметаних днів з бичачим розворотом",
+    kpi_judas_title: "Бичачий ухил Judas Swing",
+    kpi_judas_subtitle: "% бичачих днів після дисконтного підметання Лондоном",
+    kpi_compression_title: "Стан волатильності",
+    kpi_compression_subtitle: "Вчорашній діапазон vs 20-денний ADR",
+    compression_trend: "Тренд/Розширення",
+    compression_chop: "Флет/Стиснення",
+    compression_neutral: "Нейтральний",
 
     // Charts section
-    section_session: "Аналіз сесій",
-    chart_hodlod_title: "HOD / LOD за сесіями",
-    chart_hodlod_subtitle: "Розподіл максимуму/мінімуму дня",
-    chart_volatility_title: "Волатильність сесії NY",
-    chart_volatility_subtitle: "Діапазон у піпсах — останні 15 торгових днів",
-    legend_low: "Низька",
-    legend_mid: "Середня",
-    legend_high: "Висока",
+    section_session: "Розподіл HOD / LOD за сесіями",
+    chart_hod_title: "Ймовірність HOD (максимум дня)",
+    chart_hod_subtitle: "Сесія, в якій зазвичай формується HOD",
+    chart_lod_title: "Ймовірність LOD (мінімум дня)",
+    chart_lod_subtitle: "Сесія, в якій зазвичай формується LOD",
+
+    // Day of Week chart
+    chart_dow_title: "Профіль по днях тижня",
+    chart_dow_subtitle: "% бичачих і ведмежих закриттів по днях",
+    dow_bullish: "Бичачі",
+    dow_bearish: "Ведмежі",
 
     // Sessions
     session_asia: "Азія",
     session_london: "Лондон",
     session_ny: "NY",
+    session_other: "Інші",
 
     // Footer
-    footer_note: "Метрики розраховані за OHLC-свічками · Весь час у UTC",
+    footer_note: "Метрики розраховані за OHLC-свічками · Весь час у EST (UTC-5)",
 
     // Empty views
     journal_title: "Журнал угод",
@@ -182,7 +200,7 @@ export const translations = {
     settings_desc: "Керуйте підключенням OANDA / MetaApi та налаштуваннями.",
 
     // Loading
-    loading: "Обчислення метрик…",
+    loading: "Обчислення метрик SMC…",
   },
 } satisfies Record<Language, Record<string, string>>;
 
